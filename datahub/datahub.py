@@ -6,9 +6,9 @@ import random
 import requests
 
 # TODO: OAuth2 support
+# This will most likely be rolled into the front-end rather than anything here.
 # I'm still working on getting OAuth2 to work, so until then...
-# This needs to be refreshed periodically
-TESTING_TOKEN = '5wVZfVSjbpuPwTRSRoNlLD8HCBWqHO'
+
 # DataHub base URL
 BASE_URL = 'http://datahub-local.mit.edu/api/v1/'
 
@@ -27,7 +27,7 @@ class DataHub:
         """Gets the user's info using the given testing token."""
         r = requests.get(BASE_URL + 'user/', params=self.__default_params())
         if r.status_code != requests.codes.ok:
-            raise RuntimeError('Unable to return information about current user: {0}', r.text)
+            raise RuntimeError('Unable to return information about current user: {0}'.format(r.text))
         return r.json()
 
     def query_table(self, repo_name, query, rows_per_page=None, current_page=None):

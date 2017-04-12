@@ -1,25 +1,35 @@
-from deidentification import Regex, analyze_table
+from classification import SSN, Lookup
+from filter import SSNFilter, Drop
+from pipeline import Pipe, Pipeline
 from datahub import DataHub
 
-SSN = Regex(r'\d{3}-\d{2}-\d{4}')
-TESTING_TOKEN = 'lJWdZA797heJkvoNk9KM3MR3pASxIV'
+TESTING_TOKEN = 'hyhnXY88aAGenabNO6LmOFYi03c8RI'
 
-def rotate_table(table):
-    """Transforms a list of dictionaries into a dictionaries of lists."""
-    names = table[0].keys()
-    columns = {}
-    for name in names:
-        columns[name] = []
-    for row in table:
-        for name in names:
-            columns[name].append(row[name])
-    return columns
+def read_names():
+    names = set()
+    with open('data/names.dat') as f:
+        for name in f:
+            names.add(name.strip().lower())
+    return names
 
 def main():
     conn = DataHub(TESTING_TOKEN)
     table = conn.get_sample('test', 'out', 1000)
-    table = rotate_table(table)
-    print(analyze_table(table, {'ssn': SSN}))
+
+    name = Lookup(read_names())
+
+    pipeline = Pipeline()
+    pipeline.add_data(table)
+    pipeline.add_pipe('ssn', Pipe(SSN, SSNFilter()))
+    pipeline.add_pipe('name', Pipe(name, Drop()))
+
+    ratings = pipeline.classify()
+    print(ratings)
+    print({col: max(scores.items(), key=lambda s: s[1])[0] for col, scores in pipeline.ratings.items()})
+
+    pipeline.filter({'ssn': 'ssn', 'first_name': 'name'})
+
+    #print(pipeline.csv())
 
 if __name__ == '__main__':
     main()
