@@ -6,32 +6,56 @@ CSV with a variable number of rows.
 """
 import argparse
 import csv
-import random
+from faker import Faker
 
-def file_generator(path):
-    """A simple generator for files where each line is a piece of data."""
-    data = [line.strip() for line in open(path, 'r').readlines()]
+fake = Faker()
+
+def name_generator():
     while True:
-        yield random.choice(data)
+        yield fake.name()
 
 def ssn_generator():
     """A simple generator for SSNs."""
     while True:
-        leading = random.randrange(1, 900)
-        # SSNs must not start with 000, 666, or 900-999
-        if leading == 666:
-            continue
-        aaa = str(leading).zfill(3)
-        gg = str(random.randrange(1, 100)).zfill(2)
-        ssss = str(random.randrange(1, 10000)).zfill(4)
-        yield aaa + '-' + gg + '-' + ssss
+        yield fake.ssn()
 
-first_name_gen = file_generator('first_names.dat')
-last_name_gen = file_generator('last_names.dat')
+def zip_generator():
+    """A simple generator for ZIP codes."""
+    while True:
+        yield fake.postalcode()
+
+def address_generator():
+    while True:
+        yield fake.address()
+
+def date_generator():
+    """A simple generator for dates."""
+    while True:
+        yield fake.date_time_between(start_date="-100y", end_date="now", tzinfo=None)
+
+def mac_generator():
+    while True:
+        yield fake.mac_address()
+
+def email_generator():
+    while True:
+        yield fake.email()
+
+name_gen = name_generator()
 ssn_gen = ssn_generator()
-generators = [('last_name', last_name_gen),
-              ('first_name', first_name_gen),
-              ('ssn', ssn_gen)]
+zip_gen = zip_generator()
+address_gen = address_generator()
+date_gen = date_generator()
+mac_gen = mac_generator()
+email_gen = email_generator()
+generators = [('name', name_gen),
+              ('ssn', ssn_gen),
+              ('zip', zip_gen),
+              ('address', address_gen),
+              ('date', date_gen),
+              ('device_id', mac_gen),
+              ('email', email_gen)
+              ]
 
 def main():
     """Generates a random set of data to an output file."""

@@ -30,12 +30,20 @@ class Regex(Classifier):
 
 # Common PII regex
 # Social security numbers
-SSN = Regex(None, r'\d{3}-\d{2}-\d{4}')
+SSNClassifier = Regex(None, r'\d{3}-\d{2}-\d{4}')
 # Phone numbers
-PhoneNumber = Regex(None, r'(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
+PhoneNumberClassifier = Regex(None, r'(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}')
 # Email
-Email = Regex(None, r'[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}')
+EmailClassifier = Regex(None, r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}')
 # Mac address
-MAC = Regex(None, r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})')
+MACAddressClassifier = Regex(None, r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})')
+# IP addresses
+IPAddressClassifier = Regex(None, r'\b(?:\d{1,3}\.){3}\d{1,3}\b',
+    r'\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b',
+    r'\b(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\b')
+# URLs
+URLClassifier = Regex(None, r'@^(https?|ftp)://[^\s/$.?#].[^\s]*$@iS')
 # ZIP Code
-ZIPCODE = Regex(None, r'\d{5}')
+ZipCodeClassifier = Regex(None, r'\d{5}')
+# Generic number
+NumberClassifier = Regex(None, r'\d')

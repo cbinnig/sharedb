@@ -23,5 +23,9 @@ h1, h2, h3 {
 }
 
 #globalAlert {
+  z-index: 99999;
+  position: fixed;
+  top: 1em;
+  width: 1140px;
   display: none;
 }

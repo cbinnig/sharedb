@@ -61,6 +61,94 @@ function updateTable(table, target) {
     });
 }
 
+function createPipelineForm(pipelines) {
+    let form = document.getElementById("pipeline-form");
+
+    let group = document.createElement("div");
+    group.setAttribute("class", "form-group");
+    form.appendChild(group);
+
+    let select = document.createElement("select");
+    select.setAttribute("id", "pipelineChoice");
+    select.setAttribute("class", "form-control");
+    group.appendChild(select);
+
+    for (let name in pipelines) {
+        if (pipelines.hasOwnProperty(name)) {
+            let option = document.createElement("option");
+            option.textContent = name + " - " + pipelines[name];
+            option.setAttribute("value", name);
+            select.appendChild(option);
+        }
+    }
+
+    let submitButton = document.createElement("button");
+    submitButton.setAttribute("type", "submit");
+    submitButton.setAttribute("class", "btn btn-default");
+    submitButton.textContent = "Set pipeline";
+    form.appendChild(submitButton);
+}
+
+function createFilteringForm(ratings) {
+    let form = document.getElementById("filter-form");
+
+    for (let name in ratings) {
+        if (ratings.hasOwnProperty(name)) {
+            let group = document.createElement("div");
+            group.setAttribute("class", "form-group");
+            form.appendChild(group);
+
+            let label = document.createElement("label");
+            label.setAttribute("for", name + "FilterChoice");
+            label.textContent = name;
+            group.appendChild(label);
+
+            let select = document.createElement("select");
+            select.setAttribute("id", name + "FilterChoice");
+            select.setAttribute("column", name);
+            select.setAttribute("class", "form-control");
+            group.appendChild(select);
+
+            let ignore = document.createElement("option");
+            ignore.textContent = "Ignore column";
+            ignore.setAttribute("value", "ignore");
+            select.appendChild(ignore);
+
+            let best = "";
+            // Tresholded
+            let bestVal = 0.3;
+            for (let cls in ratings[name]) {
+                if (ratings[name].hasOwnProperty(cls)) {
+                    if (ratings[name][cls] > bestVal) {
+                        best = cls;
+                        bestVal = ratings[name][cls];
+                    }
+                }
+            }
+            console.log(best);
+
+            for (let cls in ratings[name]) {
+                if (ratings[name].hasOwnProperty(cls)) {
+                    let option = document.createElement("option");
+                    option.textContent = cls + " - " + ratings[name][cls];
+                    option.setAttribute("value", cls);
+                    if (cls === best) {
+                        option.selected = true;
+                        select.value = cls;
+                    }
+                    select.appendChild(option);
+                }
+            }
+        }
+    }
+
+    let submitButton = document.createElement("button");
+    submitButton.setAttribute("type", "submit");
+    submitButton.setAttribute("class", "btn btn-default");
+    submitButton.textContent = "Filter columns";
+    form.appendChild(submitButton);
+}
+
 // Datahub
 function startDH(form) {
     let data = {"token": form.dhToken.value};
@@ -71,6 +159,33 @@ function startDH(form) {
             presentAlert("alert-danger", "Unable to login to DataHub");
         }
     });
+    return false;
+}
+
+function getPipelines(form) {
+    $.get("api/pipeline", function(response) {
+        if (response["ok"]) {
+            createPipelineForm(response["pipelines"]);
+        } else {
+            presentAlert("alert-danger", "Unable to get available pipelines.");
+        }
+    });
+    return false;
+}
+
+function setPipeline(form) {
+    let data = {
+        "pipeline": form.pipelineChoice.value,
+    };
+
+    $.post("api/pipeline", data, function(response) {
+        if (response["ok"]) {
+            presentAlert("alert-success", "Pipeline set to " + response["pipeline"]);
+        } else {
+            presentAlert("alert-danger", response["error"]);
+        }
+    });
+
     return false;
 }
 
@@ -125,20 +240,38 @@ function classify(form) {
         if (response["ok"]) {
             presentAlert("alert-success", "Columns classified");
             showRatings(response["ratings"]);
+            createFilteringForm(response["ratings"]);
         } else {
-            presentAlert("alert-danger", "waaaattt");
+            presentAlert("alert-danger", "Unable to classify data");
         }
     });
     return false;
 }
 
 function filter(form) {
-    $.post("api/filter", {}, function(response) {
+    let filters = {};
+    let selections = form.getElementsByTagName("select");
+    for (let i = 0; i < selections.length; i++) {
+        let choice = selections[i].value;
+        if (choice == "ignore") {
+            continue;
+        } else {
+            filters[selections[i].getAttribute("column")] = choice;
+        }
+    }
+
+    //let request = {
+    //    "filters": filters,
+    //};
+    let request = filters;
+    console.log(request);
+
+    $.post("api/filter", request, function(response) {
         if (response["ok"]) {
             presentAlert("alert-success", "Table filtered");
             updateTable(response["table"], "#filtered");
         } else {
-            presentAlert("alert-danger", "impossible")
+            presentAlert("alert-danger", "Unable to filter data")
         }
     });
     return false;

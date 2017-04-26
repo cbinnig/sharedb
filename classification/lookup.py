@@ -22,9 +22,9 @@ class Lookup(Classifier):
         score = 0
         for row in column:
             if self.split_input:
-                score += sum(int(w.lower() in self.data) for w in row.split())
+                score += sum(int(w.lower() in self.data) for w in row.split()) > 0
             else:
-                score += int(row.lower() in self.data)
+                score += int(row.lower() in self.data) > 0
         return score / len(column)
 
 # TODO: Bloom filter lookup

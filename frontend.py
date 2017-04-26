@@ -14,32 +14,27 @@ import tornado.netutil
 import tornado.web
 
 # ShareDB
-from pipeline import Pipeline, Pipe
 from datahub import DataHub
-from classification import SSN, Lookup
-from filter import SSNFilter, Drop
+
+# Bundles
+from bundle import HIPAABundle, FERPABundle
 
 # ... state ... Yeah. Yeah.
 # TODO: Very much fix please
 # Ideally shove this into a DB/cache and load from there
-def read_names():
-    names = set()
-    with open('data/names.dat') as f:
-        for name in f:
-            names.add(name.strip().lower())
-    return names
+# Names are read in .bundle, which should be better integrated
 
-# Data processing pipeline
-PIPELINE = Pipeline()
-PIPELINE.add_pipe("ssn", Pipe(SSN, SSNFilter()))
-PIPELINE.add_pipe("name", Pipe(Lookup(read_names()), Drop()))
+# Data processing pipelines
+PIPELINES = {
+    'hipaa': HIPAABundle,
+    'ferpa': FERPABundle,
+}
+PIPELINE = None
 # DataHub connection
 CONN = None
 
 # API functions
 # TODO: OAuth
-TESTING_TOKEN = 'u5jWhFhbT6Dfx9lgqufKEHTCqYPHv9'
-
 class DHHandler(tornado.web.RequestHandler):
     def post(self):
         global CONN
@@ -50,12 +45,38 @@ class DHHandler(tornado.web.RequestHandler):
         except RuntimeError:
             self.write({'ok': False})
 
+class PipelineHandler(tornado.web.RequestHandler):
+    def get(self):
+        self.write({
+            'ok': True,
+            'pipelines': {k: v.description for k, v in PIPELINES.items()}
+        })
+
+    def post(self):
+        global PIPELINE
+        pipeline_name = self.get_argument('pipeline')
+        if pipeline_name in PIPELINES:
+            PIPELINE = PIPELINES[pipeline_name].pipeline
+            self.write({
+                'ok': True,
+                'pipeline': pipeline_name
+            })
+        else:
+            self.write({
+                'ok': False,
+                'error': 'Pipeline {0} not found'.format(pipeline_name)
+            })
+
+
 class QueryHandler(tornado.web.RequestHandler):
     def post(self):
         repo_name = self.get_argument('repoName')
         table_name = self.get_argument('tableName')
         sample_size = int(self.get_argument('sampleSize'))
-        table = CONN.get_sample(repo_name, table_name, sample_size)
+        if sample_size == 0:
+            table = CONN.get_all_rows(repo_name, table_name)
+        else:
+            table = CONN.get_sample(repo_name, table_name, sample_size)
         PIPELINE.add_data(table)
         self.write({
             'ok': True,
@@ -72,8 +93,11 @@ class ClassifyHandler(tornado.web.RequestHandler):
 
 class FilterHandler(tornado.web.RequestHandler):
     def post(self):
-        # TODO: Make configurable
-        PIPELINE.filter({col: max(scores.items(), key=lambda s: s[1])[0] for col, scores in PIPELINE.ratings.items()})
+        filters = {}
+        for arg in self.request.arguments:
+            filters[arg] = self.get_argument(arg)
+        #filters = self.get_argument('filters')
+        PIPELINE.filter(filters)
         self.write({
             'ok': True,
             'table': PIPELINE.data
@@ -99,10 +123,11 @@ class ShareDBService:
         self._app = tornado.web.Application([
             (r'/', IndexHandler),
             (r'/api/login', DHHandler),
+            (r'/api/pipeline', PipelineHandler),
             (r'/api/query', QueryHandler),
             (r'/api/classify', ClassifyHandler),
             (r'/api/filter', FilterHandler),
-        ], xsrf_cookie=True, static_path=static_path)
+        ], xsrf_cookie=True, static_path=static_path, autoreload=True)
         self.server = tornado.httpserver.HTTPServer(self._app)
         self.sockets = tornado.netutil.bind_sockets(self.port, '0.0.0.0')
         self.server.add_sockets(self.sockets)
