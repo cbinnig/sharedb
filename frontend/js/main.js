@@ -264,7 +264,6 @@ function filter(form) {
     //    "filters": filters,
     //};
     let request = filters;
-    console.log(request);
 
     $.post("api/filter", request, function(response) {
         if (response["ok"]) {
@@ -275,4 +274,15 @@ function filter(form) {
         }
     });
     return false;
+}
+
+function upload(form) {
+    var request = {"tableName" : form.uploadTable.value};
+    $.post("api/upload", request, function(response) {
+        if (response["ok"]) {
+            presentAlert("alert-success", "Filtered table uploaded");
+        } else {
+            presentAlert("alert-danger", "Unable to upload filtered table");
+        }
+    })
 }

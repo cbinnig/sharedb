@@ -56,7 +56,7 @@
         <form onsubmit="return startDH(this);">
             <div class="form-group">
                 <label for="dhToken">DataHub Token</label>
-                <input type="text" class="form-control" id="dhToken" placeholder="OAuth Token">
+                <input type="text" class="form-control" id="dhToken" placeholder="OAuth Token" value="mu5kHUV6etAQKKSTr159SpQEHaERu8">
             </div>
             <button type="submit" class="btn btn-default">Start connection</button>
         </form>
@@ -94,15 +94,15 @@
         <form onsubmit="return queryTable(this);" class="form-inline">
             <div class="form-group">
                 <label for="repoName">Repo name</label>
-                <input type="text" class="form-control" id="repoName" placeholder="Repo name">
+                <input type="text" class="form-control" id="repoName" placeholder="Repo name" value="test">
             </div>
             <div class="form-group">
                 <label for="tableName">Table name</label>
-                <input type="text" class="form-control" id="tableName" placeholder="Table name">
+                <input type="text" class="form-control" id="tableName" placeholder="Table name" value="demo">
             </div>
             <div class="form-group">
                 <label for="sampleSize">Sample size</label>
-                <input type="number" class="form-control" id="sampleSize" placeholder="size">
+                <input type="number" class="form-control" id="sampleSize" placeholder="size" value="20">
             </div>
             <button type="submit" class="btn btn-default">Load table</button>
         </form>
@@ -133,6 +133,15 @@
 
         <!-- Filtered data -->
         <table id="filtered" class="table table-hover"></table>
+
+        <!-- Upload data to Datahub-->
+        <form onsubmit="return upload(this);">
+            <div class="form-group">
+                <label for="uploadTable">Upload Table Name</label>
+                <input type="text" class="form-control" id="uploadTable" placeholder="Enter Table Name" value="filtered">
+            </div>
+            <button type="submit" class="btn btn-default">Upload Table</button>
+        </form>
 
         <!-- Download filtered data as CSV -->
     </div>

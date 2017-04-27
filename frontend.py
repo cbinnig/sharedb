@@ -29,10 +29,12 @@ PIPELINES = {
     'hipaa': HIPAABundle,
     'ferpa': FERPABundle,
 }
+# PIPELINE contains all data
 PIPELINE = None
 # DataHub connection
 CONN = None
-
+# repo_name record the table we use filter
+repo_name = None
 # API functions
 # TODO: OAuth
 class DHHandler(tornado.web.RequestHandler):
@@ -70,6 +72,7 @@ class PipelineHandler(tornado.web.RequestHandler):
 
 class QueryHandler(tornado.web.RequestHandler):
     def post(self):
+        global repo_name
         repo_name = self.get_argument('repoName')
         table_name = self.get_argument('tableName')
         sample_size = int(self.get_argument('sampleSize'))
@@ -103,6 +106,12 @@ class FilterHandler(tornado.web.RequestHandler):
             'table': PIPELINE.data
         })
 
+class UploadHandler(tornado.web.RequestHandler):
+    def post(self):
+        tableName = self.get_argument('tableName')
+        CONN.upload_table(repo_name, tableName, PIPELINE)
+
+
 # Web handlers
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
@@ -110,6 +119,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
     def render(self):
         self.write(self.render_string('templates/index.html'))
+
 
 class ShareDBService:
     """Registers handlers and kicks off the IOLoop"""
@@ -127,6 +137,7 @@ class ShareDBService:
             (r'/api/query', QueryHandler),
             (r'/api/classify', ClassifyHandler),
             (r'/api/filter', FilterHandler),
+            (r'/api/upload', UploadHandler)
         ], xsrf_cookie=True, static_path=static_path, autoreload=True)
         self.server = tornado.httpserver.HTTPServer(self._app)
         self.sockets = tornado.netutil.bind_sockets(self.port, '0.0.0.0')

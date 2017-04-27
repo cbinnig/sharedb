@@ -4,3 +4,11 @@
 
 # Ignore virtualenv
 sharedb/
+.idea/
+
+__pycache__/
+classification/__pycache__/
+datahub/__pycache__/
+filter/__pycache__/
+pipeline/__pycache__/
+

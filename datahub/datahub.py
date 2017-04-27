@@ -4,6 +4,8 @@ A series of functions to connect to DataHub, upload files, and stream data from 
 import math
 import random
 import requests
+import logging
+
 
 # TODO: OAuth2 support
 # This will most likely be rolled into the front-end rather than anything here.
@@ -96,3 +98,34 @@ class DataHub:
             else:
                 has_next = False
         return rows
+
+    def upload_table(self, repo_name, table_name, PIPELINE):
+
+        schema = '('
+        for column in PIPELINE.columns:
+            tmp = ' ' + column + ' text,'
+            schema += tmp
+        schema = schema[:-1] + ')'
+        try:
+            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, table_name, schema))
+        except Exception as e:
+            logging.error('Uncaught exception when creating table: {e}'.format(e=e))
+        num = len(PIPELINE.data[PIPELINE.columns[0]])
+        test = 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, table_name, "(NULL,214,NULL,NULL,'<2010',NULL,NULL)")
+        res = self.query_table(repo_name, test)
+        result = []
+        for i in range(num):
+            tmp = []
+            for key in PIPELINE.columns:
+                tmp.append('NULL' if PIPELINE.data[key][i]==None else "'" + str(PIPELINE.data[key][i]) + "'")
+            value = '(' + ','.join(tmp) + ')'
+            result.append(value)
+        result = ','.join(result)
+        try:
+            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, table_name, result))
+        except Exception as e:
+            logging.error('Uncaught exception when inserting table: {e}'.format(e=e))
+        print(1)
+
+
+
