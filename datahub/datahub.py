@@ -99,20 +99,46 @@ class DataHub:
                 has_next = False
         return rows
 
-    def upload_table(self, repo_name, table_name, PIPELINE):
+    def get_table_schema(self, repo_name, table_name):
+        """
+        get table schema for the repo_name.table_name
+        """
+        params = self.__default_params()
+        data = {}
+        r = requests.get(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
+                          params=params, data=data)
+        if r.status_code != requests.codes.ok:
+            raise RuntimeError('Unable to get schema on table {0}.{1}'.format(repo_name, table_name))
+        content = r.json()
+        return content["columns"]
 
-        schema = '('
+
+    def upload_table(self, repo_name, table_name, upload_table, PIPELINE):
+        """
+        upload filterd table into the same repo
+        :param repo_name: repo to input
+        :param table_name: original table name
+        :param upload_table: filtered table name
+        :param PIPELINE: contains filtered data
+        """
+        table_schema = self.get_table_schema(repo_name, table_name)
+        schema_dict = {}
+        for item in table_schema:
+            schema_dict[item['column_name']] = item['data_type']
+        schema_list = []
         for column in PIPELINE.columns:
-            tmp = ' ' + column + ' text,'
-            schema += tmp
-        schema = schema[:-1] + ')'
+            tmp = column + ' ' + schema_dict[column]
+            schema_list.append(tmp)
+        schema = '(' + ','.join(schema_list) + ')'
+
+        # create table
         try:
-            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, table_name, schema))
+            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, upload_table, schema))
         except Exception as e:
             logging.error('Uncaught exception when creating table: {e}'.format(e=e))
+
+        # insert values
         num = len(PIPELINE.data[PIPELINE.columns[0]])
-        test = 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, table_name, "(NULL,214,NULL,NULL,'<2010',NULL,NULL)")
-        res = self.query_table(repo_name, test)
         result = []
         for i in range(num):
             tmp = []
@@ -122,10 +148,9 @@ class DataHub:
             result.append(value)
         result = ','.join(result)
         try:
-            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, table_name, result))
+            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, upload_table, result))
         except Exception as e:
             logging.error('Uncaught exception when inserting table: {e}'.format(e=e))
-        print(1)
 
 
 

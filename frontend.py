@@ -33,8 +33,7 @@ PIPELINES = {
 PIPELINE = None
 # DataHub connection
 CONN = None
-# repo_name record the table we use filter
-repo_name = None
+
 # API functions
 # TODO: OAuth
 class DHHandler(tornado.web.RequestHandler):
@@ -72,7 +71,6 @@ class PipelineHandler(tornado.web.RequestHandler):
 
 class QueryHandler(tornado.web.RequestHandler):
     def post(self):
-        global repo_name
         repo_name = self.get_argument('repoName')
         table_name = self.get_argument('tableName')
         sample_size = int(self.get_argument('sampleSize'))
@@ -108,8 +106,10 @@ class FilterHandler(tornado.web.RequestHandler):
 
 class UploadHandler(tornado.web.RequestHandler):
     def post(self):
-        tableName = self.get_argument('tableName')
-        CONN.upload_table(repo_name, tableName, PIPELINE)
+        table_name = self.get_argument('tableName')
+        repo_name = self.get_argument('repoName')
+        upload_table = self.get_argument('uploadTable')
+        CONN.upload_table(repo_name, table_name, upload_table, PIPELINE)
 
 
 # Web handlers
