@@ -110,6 +110,9 @@ class UploadHandler(tornado.web.RequestHandler):
         repo_name = self.get_argument('repoName')
         upload_table = self.get_argument('uploadTable')
         CONN.upload_table(repo_name, table_name, upload_table, PIPELINE)
+        self.write({
+            'ok': True
+        })
 
 
 # Web handlers

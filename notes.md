@@ -19,7 +19,7 @@ Specifically, we want to work off of the "Safe Harbor" method, which focuses on 
 1. SSNs
 1. IP addresses
 1. Medical record numbers
-1. Biometric identifiers, including finger and voice prints (I don't think there's an easy way to automagically identify these, but I should look into standard formats.)
+1. Biometric identifiers, including finger and voice prints (I don't think there's an easy way to automagically identify these, but I should look into standard formats --- maybe some CV)
 1. Health plan beneficiary numbers
 1. Full-face photographs and any comparable images (i.e. wounds, tattoos, etc.)
 1. Account numbers

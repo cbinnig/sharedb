@@ -112,6 +112,13 @@ class DataHub:
         content = r.json()
         return content["columns"]
 
+    def delete_table(self, repo_name, table_name):
+        """
+        Delete the table required
+        """
+        params = self.__default_params()
+        r = requests.delete(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
+                          params=params)
 
     def upload_table(self, repo_name, table_name, upload_table, PIPELINE):
         """
@@ -130,6 +137,9 @@ class DataHub:
             tmp = column + ' ' + schema_dict[column]
             schema_list.append(tmp)
         schema = '(' + ','.join(schema_list) + ')'
+
+        # if table exist, delete it first
+        self.delete_table(repo_name, upload_table)
 
         # create table
         try:
