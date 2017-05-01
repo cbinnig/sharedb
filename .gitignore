@@ -7,3 +7,8 @@ sharedb/
 
 # Ignore useless file
 .idea
+__pycache__/
+classification/__pycache__/
+datahub/__pycache__/
+filter/__pycache__/
+pipeline/__pycache__/
