@@ -4,6 +4,7 @@ A series of functions to connect to DataHub, upload files, and stream data from 
 import math
 import random
 import requests
+import logging
 
 # TODO: OAuth2 support
 # This will most likely be rolled into the front-end rather than anything here.
@@ -96,3 +97,66 @@ class DataHub:
             else:
                 has_next = False
         return rows
+
+    def get_table_schema(self, repo_name, table_name):
+        """
+        get table schema for the repo_name.table_name
+        """
+        params = self.__default_params()
+        data = {}
+        r = requests.get(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
+                          params=params, data=data)
+        if r.status_code != requests.codes.ok:
+            raise RuntimeError('Unable to get schema on table {0}.{1}'.format(repo_name, table_name))
+        content = r.json()
+        return content["columns"]
+
+    def delete_table(self, repo_name, table_name):
+        """
+        Delete the table required
+        """
+        params = self.__default_params()
+        r = requests.delete(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
+                          params=params)
+
+    def upload_table(self, repo_name, table_name, upload_table, PIPELINE):
+        """
+        upload filterd table into the same repo
+        :param repo_name: repo to input
+        :param table_name: original table name
+        :param upload_table: filtered table name
+        :param PIPELINE: contains filtered data
+        """
+        table_schema = self.get_table_schema(repo_name, table_name)
+        schema_dict = {}
+        for item in table_schema:
+            schema_dict[item['column_name']] = item['data_type']
+        schema_list = []
+        for column in PIPELINE.columns:
+            tmp = column + ' ' + schema_dict[column]
+            schema_list.append(tmp)
+        schema = '(' + ','.join(schema_list) + ')'
+
+        # if table exist, delete it first
+        self.delete_table(repo_name, upload_table)
+
+        # create table
+        try:
+            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, upload_table, schema))
+        except Exception as e:
+            logging.error('Uncaught exception when creating table: {e}'.format(e=e))
+
+        # insert values
+        num = len(PIPELINE.data[PIPELINE.columns[0]])
+        result = []
+        for i in range(num):
+            tmp = []
+            for key in PIPELINE.columns:
+                tmp.append('NULL' if PIPELINE.data[key][i]==None else "'" + str(PIPELINE.data[key][i]) + "'")
+            value = '(' + ','.join(tmp) + ')'
+            result.append(value)
+        result = ','.join(result)
+        try:
+            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, upload_table, result))
+        except Exception as e:
+            logging.error('Uncaught exception when inserting table: {e}'.format(e=e))

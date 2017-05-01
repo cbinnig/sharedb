@@ -173,6 +173,16 @@ class FilterHandler(tornado.web.RequestHandler):
             'table': PIPELINE.data
         })
 
+class UploadHandler(tornado.web.RequestHandler):
+    def post(self):
+        table_name = self.get_argument('tableName')
+        repo_name = self.get_argument('repoName')
+        upload_table = self.get_argument('uploadTable')
+        CONN.upload_table(repo_name, table_name, upload_table, PIPELINE)
+        self.write({
+            'ok': True
+        })
+
 # Web handlers
 class IndexHandler(tornado.web.RequestHandler):
     def get(self):
@@ -197,6 +207,7 @@ class ShareDBService:
             (r'/api/pipeline', PipelineHandler),
             (r'/api/query', QueryHandler),
             (r'/api/classify', ClassifyHandler),
+            (r'/api/filter', FilterHandler),
             (r'/api/upload', UploadHandler)
         ],  xsrf_cookie=True,
             static_path=static_path,

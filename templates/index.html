@@ -124,6 +124,14 @@
         <!-- Filtered data -->
         <table id="filtered" class="table table-hover"></table>
 
+        <!-- Upload data to Datahub-->
+        <form onsubmit="return upload(this);">
+            <div class="form-group">
+                <label for="uploadTable">Upload Table Name</label>
+                <input type="text" class="form-control" id="uploadTable" placeholder="Enter Table Name" value="filtered">
+            </div>
+            <button type="submit" class="btn btn-default">Upload Table</button>
+        </form>
         <!-- Download filtered data as CSV -->
     </div>
 </body>
