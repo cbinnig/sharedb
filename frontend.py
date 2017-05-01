@@ -236,7 +236,7 @@ def main(port):
     logging.info('Starting up!')
     tornado.options.parse_config_file('sharedb.conf')
     service = ShareDBService(options)
-
+    
     def shutdown():
         logging.info('Shutting down!')
         service.stop()
