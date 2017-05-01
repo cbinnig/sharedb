@@ -4,3 +4,6 @@
 
 # Ignore virtualenv
 sharedb/
+
+# Ignore useless file
+.idea
