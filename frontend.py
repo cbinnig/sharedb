@@ -126,12 +126,12 @@ class IndexHandler(tornado.web.RequestHandler):
 
 class ShareDBService:
     """Registers handlers and kicks off the IOLoop"""
-    def __init__(self, port):
+    def __init__(self, options):
         """
         Args:
-            port (str): The port to start the server on.
+            options (tornado.options): Tornado server options.
         """
-        self.port = port
+        self.port = options.port
         static_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'frontend/')
         self._app = tornado.web.Application([
             (r'/', IndexHandler),
@@ -141,7 +141,13 @@ class ShareDBService:
             (r'/api/classify', ClassifyHandler),
             (r'/api/filter', FilterHandler),
             (r'/api/upload', UploadHandler)
-        ], xsrf_cookie=True, static_path=static_path, autoreload=True)
+        ], xsrf_cookie=True,
+            static_path=static_path,
+            autoreload=True,
+            auth_redirect=options.auth_redirect,
+            datahub_id=options.datahub_id,
+            datahub_secret=options.datahub_secret,
+            cookie_secret=options.secret_cookie)
         self.server = tornado.httpserver.HTTPServer(self._app)
         self.sockets = tornado.netutil.bind_sockets(self.port, '0.0.0.0')
         self.server.add_sockets(self.sockets)
@@ -162,20 +168,24 @@ class ShareDBService:
         return self.sockets[0].getsockname()[:2]
 
 def main(port):
+    from tornado.options import define, options
+    define('port', help='Start service on this port', type=int, default=8888)
+    define('auth_redirect', help='OAuth2 redirect URL')
+    define('datahub_id', help='DataHub client ID')
+    define('datahub_secret', help='DataHub secret key')
+    define('secret_cookie', help='Secret cookie hash')
+
     logging.info('Starting up!')
-    try:
-        service = ShareDBService(port)
+    tornado.options.parse_config_file('sharedb.conf')
+    service = ShareDBService(options)
 
-        def shutdown():
-            logging.info('Shutting down!')
-            service.stop()
-            logging.info('Stopped.')
-            os._exit(0)
+    def shutdown():
+        logging.info('Shutting down!')
+        service.stop()
+        logging.info('Stopped.')
+        os._exit(0)
 
-        service.start()
-    except Exception as e:
-        logging.error('Uncaught exception: {e}'.format(e=e))
-
+    service.start()
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ShareDB frontend')
     parser.add_argument('--port', dest='port', default='8888', type=int)

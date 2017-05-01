@@ -276,6 +276,11 @@ function filter(form) {
     return false;
 }
 
+// Run on startup
+$(document).ready(function(){
+    showDHLogin();
+});
+
 function upload(form) {
     var repo_name = document.getElementById("repoName").value;
     var table_name = document.getElementById("tableName").value;
