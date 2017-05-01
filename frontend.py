@@ -1,9 +1,9 @@
 """
 Demo frontend
-
 Currently lacks any session support, which is kinda big.
 """
 import argparse
+import functools
 import logging
 import os
 
@@ -12,6 +12,8 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.netutil
 import tornado.web
+import tornado.auth
+import urllib.parse
 
 # ShareDB
 from datahub import DataHub
@@ -29,13 +31,80 @@ PIPELINES = {
     'hipaa': HIPAABundle,
     'ferpa': FERPABundle,
 }
-# PIPELINE contains all data
 PIPELINE = None
 # DataHub connection
 CONN = None
 
+# OAuth2
+class DataHubMixin(tornado.auth.OAuth2Mixin):
+    """DataHub authentication via OAuth2."""
+    _OAUTH_AUTHORIZE_URL = 'http://datahub-local.mit.edu/oauth2/authorize/'
+    _OAUTH_ACCESS_TOKEN_URL = 'http://datahub-local.mit.edu/oauth2/token/'
+    _OAUTH_SETTINGS_KEY = 'datahub_oauth'
+    _OAUTH_SCOPE = 'read write'
+
+    @tornado.auth._auth_return_future
+    def get_authenticated_user(self, code, callback):
+        """Handles the login for a DataHub user, returning a user object."""
+        http = self.get_auth_http_client()
+        body = urllib.parse.urlencode({
+            'redirect_uri': self.settings['auth_redirect'],
+            'code': code,
+            'client_id': self.settings['datahub_id'],
+            'client_secret': self.settings['datahub_secret'],
+            'grant_type': 'authorization_code',
+            'scope': self._OAUTH_SCOPE
+        })
+
+        http.fetch(
+            self._OAUTH_ACCESS_TOKEN_URL,
+            functools.partial(self._on_access_token, callback),
+            method='POST',
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            body=body
+        )
+
+    def _on_access_token(self, future, response):
+        """Callback function for the exchange to the access token."""
+        print(response)
+        if response.error:
+            msg = 'DataHub auth error: {}'.format(str(response))
+            future.set_exception(tornado.auth.AuthError(msg))
+            return
+
+        args = tornado.escape.json_decode(response.body)
+        future.set_result(args)
+
+    def get_auth_http_client(self):
+        return tornado.httpclient.AsyncHTTPClient()
+
+    def authorize_redirect(self, callback=None):
+        kwargs = {
+            'redirect_uri': self.settings['auth_redirect'],
+            'client_id': self.settings['datahub_id'],
+            'callback': callback,
+            'extra_params': {'response_type': 'code'}
+        }
+
+        return super(DataHubMixin, self).authorize_redirect(**kwargs)
+
+class AuthHandler(tornado.web.RequestHandler, DataHubMixin):
+    @tornado.web.asynchronous
+    @tornado.gen.coroutine
+    def get(self):
+        code = self.get_argument('code', None)
+
+        if code is not None:
+            user = yield self.get_authenticated_user(code=code)
+
+            # TODO: This must be a secure cookie
+            self.set_cookie('oauth_token', user.get('access_token', ''), expires_days=1)
+
+            self.redirect('/')
+        else:
+            yield self.authorize_redirect()
+
 # API functions
-# TODO: OAuth
 class DHHandler(tornado.web.RequestHandler):
     def post(self):
         global CONN
@@ -97,23 +166,11 @@ class FilterHandler(tornado.web.RequestHandler):
         filters = {}
         for arg in self.request.arguments:
             filters[arg] = self.get_argument(arg)
-        #filters = self.get_argument('filters')
         PIPELINE.filter(filters)
         self.write({
             'ok': True,
             'table': PIPELINE.data
         })
-
-class UploadHandler(tornado.web.RequestHandler):
-    def post(self):
-        table_name = self.get_argument('tableName')
-        repo_name = self.get_argument('repoName')
-        upload_table = self.get_argument('uploadTable')
-        CONN.upload_table(repo_name, table_name, upload_table, PIPELINE)
-        self.write({
-            'ok': True
-        })
-
 
 # Web handlers
 class IndexHandler(tornado.web.RequestHandler):
@@ -122,7 +179,6 @@ class IndexHandler(tornado.web.RequestHandler):
 
     def render(self):
         self.write(self.render_string('templates/index.html'))
-
 
 class ShareDBService:
     """Registers handlers and kicks off the IOLoop"""
@@ -135,13 +191,13 @@ class ShareDBService:
         static_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'frontend/')
         self._app = tornado.web.Application([
             (r'/', IndexHandler),
+            (r'/auth', AuthHandler),
             (r'/api/login', DHHandler),
             (r'/api/pipeline', PipelineHandler),
             (r'/api/query', QueryHandler),
             (r'/api/classify', ClassifyHandler),
-            (r'/api/filter', FilterHandler),
             (r'/api/upload', UploadHandler)
-        ], xsrf_cookie=True,
+        ],  xsrf_cookie=True,
             static_path=static_path,
             autoreload=True,
             auth_redirect=options.auth_redirect,
@@ -186,6 +242,7 @@ def main(port):
         os._exit(0)
 
     service.start()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ShareDB frontend')
     parser.add_argument('--port', dest='port', default='8888', type=int)
