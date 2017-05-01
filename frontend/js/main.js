@@ -321,7 +321,7 @@ function filter(form) {
 }
 
 // Run on startup
-$(document).ready(function(){ 
+$(document).ready(function(){
     showDHLogin();
 });
 
