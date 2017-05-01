@@ -197,9 +197,8 @@ class ShareDBService:
             (r'/api/pipeline', PipelineHandler),
             (r'/api/query', QueryHandler),
             (r'/api/classify', ClassifyHandler),
-            (r'/api/filter', FilterHandler),
-        ],
-            xsrf_cookie=True,
+            (r'/api/upload', UploadHandler)
+        ],  xsrf_cookie=True,
             static_path=static_path,
             autoreload=True,
             auth_redirect=options.auth_redirect,
