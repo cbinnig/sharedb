@@ -4,6 +4,22 @@
  * Make sure this is the last thing loaded in the <head> element.
  */
 
+// Utility functionality
+function readCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function eraseCookie(name) {
+    createCookie(name, "", -1);
+}
+
 // Alert display
 function setVisible(id) {
   document.getElementById(id).style.visibility = "visible";
@@ -30,6 +46,31 @@ function presentAlert(style, message) {
 }
 
 // View
+function showDHLogin() {
+    // Clear out old elements
+    let div = document.getElementById("dh-login");
+    while (div.hasChildNodes()) {
+        div.removeChild(div.lastChild);
+    }
+
+    // Show the DataHub login button if required
+    let token = readCookie("oauth_token");
+    if (token == null) {
+        // Write form
+        let link = document.createElement("a");
+        link.setAttribute("href", "/auth");
+        let button = document.createElement("button");
+        button.setAttribute("class", "btn btn-default");
+        button.textContent = "Log in to DataHub";
+        div.appendChild(link);
+        link.appendChild(button);
+    } else {
+        // Set connection and display success
+        startDH(token);
+        div.textContent = "Logged in to DataHub!"
+    }
+}
+
 function updateTable(table, target) {
     // Extract columns
     let columns = [];
@@ -150,13 +191,15 @@ function createFilteringForm(ratings) {
 }
 
 // Datahub
-function startDH(form) {
-    let data = {"token": form.dhToken.value};
+function startDH(token) {
+    let data = {"token": token}
     $.post("api/login", data, function(response) {
         if (response["ok"]) {
             presentAlert("alert-success", "DataHub connection successful");
         } else {
             presentAlert("alert-danger", "Unable to login to DataHub");
+            eraseCookie("oauth_token");
+            showDHLogin();
         }
     });
     return false;
@@ -276,3 +319,8 @@ function filter(form) {
     });
     return false;
 }
+
+// Run on startup
+$(document).ready(function(){ 
+    showDHLogin();
+});

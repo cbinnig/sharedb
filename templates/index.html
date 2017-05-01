@@ -46,26 +46,16 @@
             </div>
         </div>
 
-        <h3>DataHub session</h3>
-        <p>
-            Note: this is a temporary login solution and full OAuth support will be added shortly.
-            In the meantime, please use an external service like Postman to retrieve a token.
-        </p>
+        <h3>DataHub login</h3>
 
-        <!-- Login form -->
-        <form onsubmit="return startDH(this);">
-            <div class="form-group">
-                <label for="dhToken">DataHub Token</label>
-                <input type="text" class="form-control" id="dhToken" placeholder="OAuth Token">
-            </div>
-            <button type="submit" class="btn btn-default">Start connection</button>
-        </form>
+        <!-- Login panel -->
+        <div id="dh-login"></div>
 
         <hr>
         <h3>Select pre-defined classifiers and filters</h3>
         <p>
             Before filtering or classifying any data, you must set which pipeline you&rsquo;d like to use.
-            This configures a set of classifiers (which classify columns based on their data) and filters (which modify columns based on what they&rdquo;re classified as).
+            This configures a set of classifiers (which classify columns based on their data) and filters (which modify columns based on what they&rsquo;re classified as).
         </p>
 
         <!-- TODO: Custom pipelines -->
