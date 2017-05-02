@@ -3,3 +3,4 @@ from .regex import Regex, SSNClassifier, EmailClassifier, PhoneNumberClassifier,
 from .address import AddressClassifier
 from .date import DateClassifier
 from .lookup import Lookup
+from .face import FaceClassifier
