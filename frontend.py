@@ -112,7 +112,8 @@ class DHHandler(tornado.web.RequestHandler):
         token = self.get_argument('token')
         try:
             CONN = DataHub(token)
-            self.write({'ok': True})
+            table_list = CONN.table_list
+            self.write({'ok': True, 'table_list': table_list})
         except RuntimeError:
             self.write({'ok': False})
 

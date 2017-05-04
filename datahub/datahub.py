@@ -17,6 +17,7 @@ class DataHub:
     def __init__(self, access_token):
         self.token = access_token
         self.info = self.get_user_info()
+        self.table_list= self.get_table_info()
 
     def __default_params(self):
         """Generates default parameters for all calls to DataHub."""
@@ -30,6 +31,23 @@ class DataHub:
         if r.status_code != requests.codes.ok:
             raise RuntimeError('Unable to return information about current user: {0}'.format(r.text))
         return r.json()
+
+    def get_table_info(self):
+        """to get repo and table information"""
+        params = {}
+        params['access_token'] = self.token
+
+        data = {}
+        r = requests.get(BASE_URL + 'repos', params=params, data=data)
+        r = r.json()
+        repo_list = {}
+        for item in r['repos']:
+            repo_list[item['repo_name']] = []
+            r_table = (requests.get(BASE_URL + 'repos/{0}/{1}'.format(self.info['username'], item['repo_name']),
+                                   params=params)).json()
+            for table in r_table['tables']:
+                repo_list[item['repo_name']].append(table['table_name'])
+        return repo_list
 
     def query_table(self, repo_name, query, rows_per_page=None, current_page=None):
         """

@@ -3,7 +3,8 @@
  * 
  * Make sure this is the last thing loaded in the <head> element.
  */
-
+// Global variable
+var TABLE_LIST;
 // Utility functionality
 function readCookie(name) {
     var nameEQ = name + "=";
@@ -17,7 +18,8 @@ function readCookie(name) {
 }
 
 function eraseCookie(name) {
-    createCookie(name, "", -1);
+    // createCookie(name, "", -1);
+    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;";
 }
 
 // Alert display
@@ -38,7 +40,7 @@ function showAlert() {
 }
 
 function presentAlert(style, message) {
-  let alert = document.getElementById("globalAlert");
+  var alert = document.getElementById("globalAlert");
   showAlert();
   alert.innerHTML = message;
   alert.className = "alert " + style;
@@ -48,18 +50,18 @@ function presentAlert(style, message) {
 // View
 function showDHLogin() {
     // Clear out old elements
-    let div = document.getElementById("dh-login");
+    var div = document.getElementById("dh-login");
     while (div.hasChildNodes()) {
         div.removeChild(div.lastChild);
     }
 
     // Show the DataHub login button if required
-    let token = readCookie("oauth_token");
+    var token = readCookie("oauth_token");
     if (token == null) {
         // Write form
-        let link = document.createElement("a");
+        var link = document.createElement("a");
         link.setAttribute("href", "/auth");
-        let button = document.createElement("button");
+        var button = document.createElement("button");
         button.setAttribute("class", "btn btn-default");
         button.textContent = "Log in to DataHub";
         div.appendChild(link);
@@ -157,7 +159,7 @@ function createFilteringForm(ratings) {
 
             let best = "";
             // Tresholded
-            let bestVal = 0.3;
+            var bestVal = 0.3;
             for (let cls in ratings[name]) {
                 if (ratings[name].hasOwnProperty(cls)) {
                     if (ratings[name][cls] > bestVal) {
@@ -168,9 +170,9 @@ function createFilteringForm(ratings) {
             }
             console.log(best);
 
-            for (let cls in ratings[name]) {
+            for (var cls in ratings[name]) {
                 if (ratings[name].hasOwnProperty(cls)) {
-                    let option = document.createElement("option");
+                    var option = document.createElement("option");
                     option.textContent = cls + " - " + ratings[name][cls];
                     option.setAttribute("value", cls);
                     if (cls === best) {
@@ -183,7 +185,7 @@ function createFilteringForm(ratings) {
         }
     }
 
-    let submitButton = document.createElement("button");
+    var submitButton = document.createElement("button");
     submitButton.setAttribute("type", "submit");
     submitButton.setAttribute("class", "btn btn-default");
     submitButton.textContent = "Filter columns";
@@ -191,14 +193,39 @@ function createFilteringForm(ratings) {
 }
 
 // Datahub
+function setTable(form) {
+    var repoName = form.value;
+    var tableName = document.getElementById('tableName');
+    while (tableName.firstChild) {
+        tableName.removeChild(tableName.firstChild);
+    }
+    for (var table in TABLE_LIST[repoName]) {
+        var option = document.createElement("option");
+        option.textContent = TABLE_LIST[repoName][table];
+        tableName.appendChild(option);
+    }
+}
+
+function setRepo() {
+    var repoName = document.getElementById('repoName');
+    for (var repo in TABLE_LIST) {
+        var option = document.createElement("option");
+        option.textContent = repo;
+        repoName.appendChild(option);
+    }
+    setTable(repoName);
+
+}
 function startDH(token) {
-    let data = {"token": token}
+    var data = {"token": token};
     $.post("api/login", data, function(response) {
         if (response["ok"]) {
             presentAlert("alert-success", "DataHub connection successful");
+            TABLE_LIST = response["table_list"];
+            setRepo();
         } else {
             presentAlert("alert-danger", "Unable to login to DataHub");
-            eraseCookie("oauth_token");
+           eraseCookie("oauth_token");
             showDHLogin();
         }
     });
@@ -217,7 +244,7 @@ function getPipelines(form) {
 }
 
 function setPipeline(form) {
-    let data = {
+    var data = {
         "pipeline": form.pipelineChoice.value,
     };
 
