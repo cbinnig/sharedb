@@ -137,7 +137,7 @@ class DataHub:
         r = requests.delete(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
                           params=params)
 
-    def upload_table(self, repo_name, table_name, upload_table, PIPELINE):
+    def upload_table(self, repo_name, table_name, upload_table, PIPELINE, up_repo_name):
         """
         upload filterd table into the same repo
         :param repo_name: repo to input
@@ -156,11 +156,11 @@ class DataHub:
         schema = '(' + ','.join(schema_list) + ')'
 
         # if table exist, delete it first
-        self.delete_table(repo_name, upload_table)
+        self.delete_table(up_repo_name, upload_table)
 
         # create table
         try:
-            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, upload_table, schema))
+            res = self.query_table(up_repo_name, 'CREATE TABLE {0}.{1}{2}'.format(up_repo_name, upload_table, schema))
         except Exception as e:
             logging.error('Uncaught exception when creating table: {e}'.format(e=e))
 
@@ -175,6 +175,6 @@ class DataHub:
             result.append(value)
         result = ','.join(result)
         try:
-            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, upload_table, result))
+            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(up_repo_name, upload_table, result))
         except Exception as e:
             logging.error('Uncaught exception when inserting table: {e}'.format(e=e))

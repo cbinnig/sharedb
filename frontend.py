@@ -144,11 +144,11 @@ class QueryHandler(tornado.web.RequestHandler):
     def post(self):
         repo_name = self.get_argument('repoName')
         table_name = self.get_argument('tableName')
-        sample_size = int(self.get_argument('sampleSize'))
-        if sample_size == 0:
+        sample_size = self.get_argument('sampleSize')
+        if sample_size == "":
             table = CONN.get_all_rows(repo_name, table_name)
         else:
-            table = CONN.get_sample(repo_name, table_name, sample_size)
+            table = CONN.get_sample(repo_name, table_name, int(sample_size))
         PIPELINE.add_data(table)
         self.write({
             'ok': True,
@@ -179,7 +179,8 @@ class UploadHandler(tornado.web.RequestHandler):
         table_name = self.get_argument('tableName')
         repo_name = self.get_argument('repoName')
         upload_table = self.get_argument('uploadTable')
-        CONN.upload_table(repo_name, table_name, upload_table, PIPELINE)
+        up_repo_name = self.get_argument('up_repo_name')
+        CONN.upload_table(repo_name, table_name, upload_table, PIPELINE, up_repo_name)
         self.write({
             'ok': True
         })

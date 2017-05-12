@@ -75,26 +75,26 @@ function showDHLogin() {
 
 function updateTable(table, target) {
     // Extract columns
-    let columns = [];
-    for (let key in table) {
+    var columns = [];
+    for (var key in table) {
         if (table.hasOwnProperty(key)) {
             columns.push(key);
         }
     }
     // Build data
-    let size = table[columns[0]].length;
-    let data = [];
-    for (let i = 0; i < size; i++) {
-        let row = [];
-        for (let key of columns) {
+    var size = table[columns[0]].length;
+    var data = [];
+    for (var i = 0; i < size; i++) {
+        var row = [];
+        for (var key of columns) {
             row.push(table[key][i]);
         }
         data.push(row);
     }
     // Reshape columns
 
-    let stupidColumns = [];
-    for (let name of columns) {
+    var stupidColumns = [];
+    for (var name of columns) {
         stupidColumns.push({"title": name});
     }
 
@@ -105,7 +105,7 @@ function updateTable(table, target) {
 }
 
 function createPipelineForm(pipelines) {
-    let form = document.getElementById("pipeline-form");
+    var form = document.getElementById("pipeline-form");
 
     let group = document.createElement("div");
     group.setAttribute("class", "form-group");
@@ -168,7 +168,6 @@ function createFilteringForm(ratings) {
                     }
                 }
             }
-            console.log(best);
 
             for (var cls in ratings[name]) {
                 if (ratings[name].hasOwnProperty(cls)) {
@@ -208,10 +207,14 @@ function setTable(form) {
 
 function setRepo() {
     var repoName = document.getElementById('repoName');
+    var upRepoName = document.getElementById('upRepoName');
     for (var repo in TABLE_LIST) {
         var option = document.createElement("option");
         option.textContent = repo;
+        var upOption = document.createElement("option");
+        upOption.textContent = repo;
         repoName.appendChild(option);
+        upRepoName.appendChild(upOption);
     }
     setTable(repoName);
 
@@ -260,10 +263,10 @@ function setPipeline(form) {
 }
 
 function queryTable(form) {
-    let data = {
+    var data = {
         "repoName": form.repoName.value,
         "tableName": form.tableName.value,
-        "sampleSize": form.sampleSize.value,
+        "sampleSize": form.sampleSize.value
     };
 
     $.post("api/query", data, function(response) {
@@ -319,10 +322,10 @@ function classify(form) {
 }
 
 function filter(form) {
-    let filters = {};
-    let selections = form.getElementsByTagName("select");
-    for (let i = 0; i < selections.length; i++) {
-        let choice = selections[i].value;
+    var filters = {};
+    var selections = form.getElementsByTagName("select");
+    for (var i = 0; i < selections.length; i++) {
+        var choice = selections[i].value;
         if (choice == "ignore") {
             continue;
         } else {
@@ -333,8 +336,7 @@ function filter(form) {
     //let request = {
     //    "filters": filters,
     //};
-    let request = filters;
-    console.log(request);
+    var request = filters;
 
     $.post("api/filter", request, function(response) {
         if (response["ok"]) {
@@ -354,10 +356,12 @@ $(document).ready(function(){
 
 function upload(form) {
     var repo_name = document.getElementById("repoName").value;
+    var up_repo_name = document.getElementById("upRepoName").value;
     var table_name = document.getElementById("tableName").value;
     var request = {"uploadTable" : form.uploadTable.value,
                    "repoName" : repo_name,
-                   "tableName" : table_name};
+                   "tableName" : table_name,
+                   "up_repo_name" : up_repo_name};
     $.post("api/upload", request, function(response) {
         if (response["ok"]) {
             presentAlert("alert-success", "Filtered table uploaded");

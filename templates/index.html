@@ -129,6 +129,11 @@
         <!-- Upload data to Datahub-->
         <form onsubmit="return upload(this);">
             <div class="form-group">
+                <label for="upRepoName">Repo name</label>
+                <select id="upRepoName" class="form-control" style="width: 200px"></select>
+                <!--<input type="text" class="form-control" id="repoName" placeholder="Repo name" value="test">-->
+            </div>
+            <div class="form-group">
                 <label for="uploadTable">Upload Table Name</label>
                 <input type="text" class="form-control" id="uploadTable" placeholder="Enter Table Name" value="filtered">
             </div>
