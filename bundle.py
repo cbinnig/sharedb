@@ -3,7 +3,7 @@ Pre-defined Pipelines to match certain deidentification standards,
 like HIPAA.
 """
 from pipeline import Pipe, Pipeline
-from classification import SSNClassifier, EmailClassifier, PhoneNumberClassifier, MACAddressClassifier, IPAddressClassifier, URLClassifier, ZipCodeClassifier, NumberClassifier, AddressClassifier, Lookup, DateClassifier
+from classification import SSNClassifier, EmailClassifier, PhoneNumberClassifier, MACAddressClassifier, IPAddressClassifier, URLClassifier, ZipCodeClassifier, NumberClassifier, AddressClassifier, Lookup, DateClassifier, FaceClassifier
 from filter import Drop, ZipCodeFilter, AddressFilter, DateFilter
 
 class Bundle:
@@ -33,6 +33,7 @@ def build_hipaa():
     pipeline.add_pipe('ssn', Pipe(SSNClassifier, Drop()))
     pipeline.add_pipe('ip_address', Pipe(IPAddressClassifier, Drop()))
     pipeline.add_pipe('mac_address', Pipe(MACAddressClassifier, Drop()))
+    pipeline.add_pipe('face', Pipe(FaceClassifier(), Drop()))
     # TODO: This is far too sensitive
     # pipeline.add_pipe('number', Pipe(NumberClassifier, Drop()))
     return pipeline
