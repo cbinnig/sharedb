@@ -1,7 +1,9 @@
 """Face identifier using the face_recognition library."""
 import face_recognition
 
+
 from .classifier import Classifier
+
 
 class FaceClassifier(Classifier):
     def __init__(self):
