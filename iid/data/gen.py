@@ -41,6 +41,10 @@ def email_generator():
     while True:
         yield fake.email()
 
+def face_generator():
+    while True:
+        yield 'img/obama.jpg'
+
 name_gen = name_generator()
 ssn_gen = ssn_generator()
 zip_gen = zip_generator()
@@ -48,13 +52,15 @@ address_gen = address_generator()
 date_gen = date_generator()
 mac_gen = mac_generator()
 email_gen = email_generator()
+face_gen = face_generator()
 generators = [('name', name_gen),
               ('ssn', ssn_gen),
               ('zip', zip_gen),
               ('address', address_gen),
               ('date', date_gen),
               ('device_id', mac_gen),
-              ('email', email_gen)
+              ('email', email_gen),
+              ('face', face_gen)
               ]
 
 def main():

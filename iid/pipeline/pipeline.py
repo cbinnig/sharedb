@@ -3,8 +3,8 @@ A basic pipeline structure routing from classifiers to filters.
 """
 import csv
 import io
+from iid.filter import Drop
 
-from filter import Drop
 
 class Pipe:
     """

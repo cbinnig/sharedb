@@ -6,7 +6,6 @@ import random
 import requests
 import logging
 
-
 # TODO: OAuth2 support
 # This will most likely be rolled into the front-end rather than anything here.
 # I'm still working on getting OAuth2 to work, so until then...
@@ -18,6 +17,7 @@ class DataHub:
     def __init__(self, access_token):
         self.token = access_token
         self.info = self.get_user_info()
+        self.table_list= self.get_table_info()
 
     def __default_params(self):
         """Generates default parameters for all calls to DataHub."""
@@ -31,6 +31,23 @@ class DataHub:
         if r.status_code != requests.codes.ok:
             raise RuntimeError('Unable to return information about current user: {0}'.format(r.text))
         return r.json()
+
+    def get_table_info(self):
+        """to get repo and table information"""
+        params = {}
+        params['access_token'] = self.token
+
+        data = {}
+        r = requests.get(BASE_URL + 'repos', params=params, data=data)
+        r = r.json()
+        repo_list = {}
+        for item in r['repos']:
+            repo_list[item['repo_name']] = []
+            r_table = (requests.get(BASE_URL + 'repos/{0}/{1}'.format(self.info['username'], item['repo_name']),
+                                   params=params)).json()
+            for table in r_table['tables']:
+                repo_list[item['repo_name']].append(table['table_name'])
+        return repo_list
 
     def query_table(self, repo_name, query, rows_per_page=None, current_page=None):
         """
@@ -120,7 +137,7 @@ class DataHub:
         r = requests.delete(BASE_URL + 'repos/{0}/{1}/tables/{2}'.format(self.info['username'], repo_name, table_name),
                           params=params)
 
-    def upload_table(self, repo_name, table_name, upload_table, PIPELINE):
+    def upload_table(self, repo_name, table_name, upload_table, PIPELINE, up_repo_name):
         """
         upload filterd table into the same repo
         :param repo_name: repo to input
@@ -139,11 +156,11 @@ class DataHub:
         schema = '(' + ','.join(schema_list) + ')'
 
         # if table exist, delete it first
-        self.delete_table(repo_name, upload_table)
+        self.delete_table(up_repo_name, upload_table)
 
         # create table
         try:
-            res = self.query_table(repo_name, 'CREATE TABLE {0}.{1}{2}'.format(repo_name, upload_table, schema))
+            res = self.query_table(up_repo_name, 'CREATE TABLE {0}.{1}{2}'.format(up_repo_name, upload_table, schema))
         except Exception as e:
             logging.error('Uncaught exception when creating table: {e}'.format(e=e))
 
@@ -158,9 +175,6 @@ class DataHub:
             result.append(value)
         result = ','.join(result)
         try:
-            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(repo_name, upload_table, result))
+            res = self.query_table(repo_name, 'INSERT INTO {0}.{1} VALUES {2}'.format(up_repo_name, upload_table, result))
         except Exception as e:
             logging.error('Uncaught exception when inserting table: {e}'.format(e=e))
-
-
-

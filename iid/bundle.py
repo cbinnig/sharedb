@@ -2,9 +2,13 @@
 Pre-defined Pipelines to match certain deidentification standards,
 like HIPAA.
 """
-from pipeline import Pipe, Pipeline
-from classification import SSNClassifier, EmailClassifier, PhoneNumberClassifier, MACAddressClassifier, IPAddressClassifier, URLClassifier, ZipCodeClassifier, NumberClassifier, AddressClassifier, Lookup, DateClassifier
-from filter import Drop, ZipCodeFilter, AddressFilter, DateFilter
+from iid.pipeline import Pipe, Pipeline
+from iid.classification import SSNClassifier, EmailClassifier, PhoneNumberClassifier, MACAddressClassifier, IPAddressClassifier, URLClassifier, ZipCodeClassifier, NumberClassifier, AddressClassifier, Lookup, DateClassifier, FaceClassifier
+from iid.filter import Drop, ZipCodeFilter, AddressFilter, DateFilter
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 
 class Bundle:
     def __init__(self, pipeline, description):
@@ -14,12 +18,14 @@ class Bundle:
         self.pipeline = pipeline
         self.description = description
 
+
 def read_names():
     names = set()
-    with open('data/names.dat') as f:
+    with open(os.path.join(BASE_DIR, 'data/names.dat')) as f:
         for name in f:
             names.add(name.strip().lower())
     return names
+
 
 def build_hipaa():
     pipeline = Pipeline()
@@ -33,11 +39,13 @@ def build_hipaa():
     pipeline.add_pipe('ssn', Pipe(SSNClassifier, Drop()))
     pipeline.add_pipe('ip_address', Pipe(IPAddressClassifier, Drop()))
     pipeline.add_pipe('mac_address', Pipe(MACAddressClassifier, Drop()))
+    pipeline.add_pipe('face', Pipe(FaceClassifier(), Drop()))
     # TODO: This is far too sensitive
     # pipeline.add_pipe('number', Pipe(NumberClassifier, Drop()))
     return pipeline
 
 HIPAABundle = Bundle(build_hipaa(), 'HIPAA PII Removal')
+
 
 def build_ferpa():
     pipeline = Pipeline()
