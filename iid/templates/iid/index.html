@@ -51,12 +51,17 @@
 
 {#        <!-- Login panel -->#}
 {#        <div id="dh-login"></div>#}
-        <form onsubmit="return startDH(this);" class="form-inline">{% csrf_token %}
+
+        <form onsubmit="return getToken(this);" class="form-inline" id="login">
             <div class="form-group">
-                <label for="token">token</label>
-                <input type="text" class="form-control" id="token" placeholder="enter token" value="ZFx33RDNjqSR38tfxm2vA9uIuaNkd8">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" value="jinyan">
             </div>
-            <button type="submit" class="btn btn-default">Login to DataHub</button>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" value="123456">
+            </div>
+            <button type="submit" class="btn btn-default">Login</button>
         </form>
         <hr>
         <h3>Select pre-defined classifiers and filters</h3>

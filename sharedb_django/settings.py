@@ -118,3 +118,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# custom information
+
+TOKEN_URL = "http://datahub-local.mit.edu/oauth2/token/"
+CLIENT_ID = "2LQfiRmzunxIecUMV6PmctWgIwDFiYKz4NFt7iM7"
+CLIENT_SECRET = "pBiFd1Qnrsqt8AF4DjTNHD4MHApt9DCVdIYitkQTo96mX9ISzDXWw8RfIas1KeuwhSBWI4GScVBsdwYEzMPqzMlbkuUssK4HyZG64MFhDZfZQKyjrV6zsoAqtvNOWQuZ"
+GRANT_TYPE = "password"

@@ -49,28 +49,26 @@ function presentAlert(style, message) {
 
 // View
 function showDHLogin() {
-    // Clear out old elements
-    var div = document.getElementById("dh-login");
-    while (div.hasChildNodes()) {
-        div.removeChild(div.lastChild);
-    }
 
     // Show the DataHub login button if required
     var token = readCookie("oauth_token");
-    if (token == null) {
-        // Write form
-        var link = document.createElement("a");
-        link.setAttribute("href", "/auth");
-        var button = document.createElement("button");
-        button.setAttribute("class", "btn btn-default");
-        button.textContent = "Log in to DataHub";
-        div.appendChild(link);
-        link.appendChild(button);
-    } else {
-        // Set connection and display success
+    if (token != null) {
         startDH(token);
-        div.textContent = "Logged in to DataHub!"
+        // div.textContent = "Logged into DataHub!"
     }
+        // var auth_form = document.getElementById("login");
+        // var link = document.createElement("a");
+        // link.setAttribute("href", "/auth");
+        // var button = document.createElement("button");
+        // button.setAttribute("class", "btn btn-default");
+        // button.textContent = "Log in to DataHub";
+        // div.appendChild(link);
+        // link.appendChild(button);
+    // } else {
+    //     // Set connection and display success
+    //     startDH(token);
+    //     div.textContent = "Logged in to DataHub!"
+    // }
 }
 
 function updateTable(table, target) {
@@ -219,8 +217,27 @@ function setRepo() {
     setTable(repoName);
 
 }
+function getToken() {
+    var data = {
+        "username": document.getElementById("username").value,
+        "password": document.getElementById("password").value
+    };
+    $.get("auth/", data, function(response) {
+        if (response["ok"]) {
+            token = response["token"];
+            startDH(token);
+        } else {
+            presentAlert("alert-danger", "Unable to login to DataHub");
+
+        }
+    });
+
+    return false;
+}
 function startDH(token) {
-    var data = {"token": document.getElementById("token").value};
+    data = {
+        "token": token
+    };
     $.post("login/", data, function(response) {
         if (response["ok"]) {
             presentAlert("alert-success", "DataHub connection successful");
@@ -228,12 +245,9 @@ function startDH(token) {
             setRepo();
         } else {
             presentAlert("alert-danger", "Unable to login to DataHub");
-           eraseCookie("oauth_token");
-            showDHLogin();
+            eraseCookie("oauth_token");
         }
-    });
-
-    return false;
+    })
 }
 
 function getPipelines(form) {
@@ -351,9 +365,9 @@ function filter(form) {
 }
 
 // Run on startup
-// $(document).ready(function(){
-//     showDHLogin();
-// });
+$(document).ready(function(){
+    showDHLogin();
+});
 
 function upload(form) {
     var repo_name = document.getElementById("repoName").value;

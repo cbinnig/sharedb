@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^query/', views.query, name='query'),
     url(r'^classify/', views.classify, name='classify'),
     url(r'^filter/', views.filter, name='filter'),
-    url(r'^upload/', views.upload, name='upload')
+    url(r'^upload/', views.upload, name='upload'),
+    url(r'^auth/', views.auth, name='auth')
 ]
