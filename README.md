@@ -41,8 +41,6 @@ If we want to make the dashes optional, we can either just use `-?` or allow for
 
 ## Environment
 My work here so far has been done using a virtual environment in the `sharedb` folder.
-It's somewhat easier to collect all of my packages into a virtualenv to ensure that future users don't worry about requirements.
-I may or may not actually commit this to the git repo due to its size, but I will always have a `requirements.txt`.
 
 --
 
